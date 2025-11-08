@@ -8,6 +8,15 @@ from dateutil import parser as dtparser
 
 app = FastAPI(title="FlyWise AI Service", version="0.1.0")
 
+from fastapi.middleware.cors import CORSMiddleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # you can later restrict this
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 def _dig(obj, path: Optional[str]):
     """Walk obj using dot path like 'results.items'. Returns None if not found."""
     if not path:
