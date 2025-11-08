@@ -11,8 +11,8 @@ app.use(express.json());
 const API_KEY = process.env.API_KEY;
 const PORT = process.env.PORT || 3000;
 
-app.use("/flight", roundWayRoute);
-app.use("/flight", oneWayRoute);
+app.use("/", roundWayRoute);
+app.use("/", oneWayRoute);
 
 app.listen(PORT, () => {
   console.log("Server running on PORT:", PORT);
