@@ -1,71 +1,77 @@
 import { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
-export default function SearchBox({ onSearch }) {
-  const [origin, setOrigin] = useState("");
-  const [destination, setDestination] = useState("");
+export default function SearchBar() {
+  const navigate = useNavigate();
+
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
   const [month, setMonth] = useState("");
-  const [stay, setStay] = useState(15);
+  const [days, setDays] = useState(7);
   const [loading, setLoading] = useState(false);
 
   const handleSearch = async () => {
-    if (!origin || !destination || !month) {
-      alert("Please fill all fields");
-      return;
+    if (!from || !to || !month) {
+      return alert("Please fill all fields");
     }
 
     setLoading(true);
+
     try {
-      const response = await axios.post("http://localhost:8000/search", {
-        origin,
-        destination,
-        month,
-        stay_length: stay,
+      const departDate = `${month}-01`;
+      const returnDate = `${month}-${String(1 + Number(days)).padStart(2, "0")}`;
+
+      const res = await axios.get("http://localhost:5000/api/roundtrip", {
+        params: {
+          departure_airport_code: from,
+          arrival_airport_code: to,
+          departure_date: departDate,
+          arrival_date: returnDate,
+          number_of_adults: 1,
+          currency: "EUR",
+        },
       });
-      onSearch(response.data);
-    } catch (error) {
-      alert("Backend not responding yet.");
+
+      navigate("/results", { state: { flights: res.data } });
+    } catch (err) {
+      console.error(err);
+      alert("Error fetching flights");
     }
+
     setLoading(false);
   };
 
   return (
-    <div className="bg-white shadow-xl w-full max-w-2xl p-6 rounded-2xl">
-      <h2 className="text-2xl font-bold mb-6 text-blue-600">Find Cheapest Dates</h2>
-
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <input
-          value={origin}
-          onChange={(e) => setOrigin(e.target.value)}
-          placeholder="From (e.g. MAN)"
-          className="border p-3 rounded-lg w-full"
-        />
-        <input
-          value={destination}
-          onChange={(e) => setDestination(e.target.value)}
-          placeholder="To (e.g. DEL)"
-          className="border p-3 rounded-lg w-full"
-        />
-        <input
-          value={month}
-          onChange={(e) => setMonth(e.target.value)}
-          placeholder="Month (YYYY-MM)"
-          className="border p-3 rounded-lg w-full"
-        />
-        <input
-          type="number"
-          value={stay}
-          onChange={(e) => setStay(e.target.value)}
-          placeholder="Stay Length (days)"
-          className="border p-3 rounded-lg w-full"
-        />
-      </div>
-
+    <div className="flex gap-3 items-center bg-white shadow-lg p-4 rounded-xl border">
+      <input
+        type="text"
+        placeholder="From (Airport Code)"
+        className="border p-2 rounded"
+        onChange={(e) => setFrom(e.target.value)}
+      />
+      <input
+        type="text"
+        placeholder="To (Airport Code)"
+        className="border p-2 rounded"
+        onChange={(e) => setTo(e.target.value)}
+      />
+      <input
+        type="month"
+        className="border p-2 rounded"
+        onChange={(e) => setMonth(e.target.value)}
+      />
+      <input
+        type="number"
+        className="border p-2 rounded"
+        defaultValue={7}
+        onChange={(e) => setDays(e.target.value)}
+      />
       <button
         onClick={handleSearch}
-        className="w-full bg-blue-600 text-white p-3 rounded-xl hover:bg-blue-700 transition"
+        className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
       >
-        {loading ? "Searching..." : "Search Best Dates"}
+        {loading ? "Searching..." : "Search"}
       </button>
     </div>
   );

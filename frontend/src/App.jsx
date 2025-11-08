@@ -11,6 +11,7 @@ export default function App() {
       <Route path="/results" element={<Results />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/results" element={<Results />} />
     </Routes>
   );
 }
