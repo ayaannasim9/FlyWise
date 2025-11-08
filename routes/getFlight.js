@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const API_KEY = process.env.API_KEY;
+const API_KEY = process.env.API_KEY || "690faab4ca6c7ad1653fad49";
 const BASE_URL = "https://api.flightapi.io/";
 
 router.get("/roundtrip", async (req, res) => {
@@ -59,11 +59,13 @@ router.get("/roundtrip", async (req, res) => {
 
     // 3) pick a few flights (say top 5)
     const simplified = itineraries.slice(0, 5).map((it) => {
-      // price can be in two places, prefer cheapest_price
+      const priceInfo = it.cheapest_price ?? it.pricing_options?.[0]?.price ?? {};
       const price =
-        it.cheapest_price?.amount ??
-        it.pricing_options?.[0]?.price?.amount ??
-        null;
+        typeof priceInfo.amount === "number"
+          ? priceInfo.amount
+          : Number(priceInfo.amount ?? NaN);
+      const currency =
+        priceInfo.currency_code || priceInfo.currency || data.currency || "EUR";
 
       // get legs (usually 2 for round trip)
       const legsForThisItinerary = (it.leg_ids || [])
@@ -74,6 +76,15 @@ router.get("/roundtrip", async (req, res) => {
           // try to resolve airport codes/names if places are present
           const origin = placesById[leg.origin_place_id];
           const destination = placesById[leg.destination_place_id];
+          const carrierList =
+            leg.marketing_carriers ||
+            leg.operating_carriers ||
+            leg.marketing_carrier_codes ||
+            leg.operating_carrier_codes ||
+            [];
+          const normalizedCarrier = Array.isArray(carrierList)
+            ? carrierList[0]
+            : carrierList;
 
           return {
             leg_id: leg.id,
@@ -84,14 +95,27 @@ router.get("/roundtrip", async (req, res) => {
               ? destination.code || destination.name
               : leg.destination_place_id,
             stops: leg.stop_count,
-            duration_mins: leg.duration,
+            duration_mins: leg.duration_mins ?? leg.duration,
+            airline:
+              normalizedCarrier?.name ||
+              normalizedCarrier?.code ||
+              normalizedCarrier ||
+              "Multiple airlines",
           };
         })
         .filter(Boolean);
+
+      const totalDuration = legsForThisItinerary.reduce(
+        (sum, leg) => sum + (leg.duration_mins || 0),
+        0
+      );
+
       return {
         id: it.id,
         price,
+        currency,
         legs: legsForThisItinerary,
+        total_duration_mins: totalDuration,
       };
     });
 

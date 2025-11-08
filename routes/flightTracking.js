@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const API_KEY = process.env.API_KEY;
+const API_KEY = process.env.API_KEY || "690faab4ca6c7ad1653fad49";
 const BASE_URL = "https://api.flightapi.io/";
 
 router.get("/trackFlight", async (req, res) => {

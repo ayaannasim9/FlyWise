@@ -1,21 +1,19 @@
 require("dotenv").config();
 const express = require("express");
-const roundWayRoute = require("./routes/getFlight");
-const oneWayRoute = require("./routes/getSingle");
-const flightTracker = require("./routes/flightTracking");
+const cors = require("cors");
+
+const getFlight = require("./routes/getFlight");
+const getSingle = require("./routes/getSingle");
+const flightTracking = require("./routes/flightTracking");
 
 const app = express();
 
-// Middleware to parse JSON bodies
+app.use(cors());
 app.use(express.json());
 
-const API_KEY = process.env.API_KEY;
+app.use("/", getFlight);
+app.use("/", getSingle);
+app.use("/", flightTracking);
+
 const PORT = process.env.PORT || 3000;
-
-app.use("/", roundWayRoute);
-app.use("/", oneWayRoute);
-app.use("/", flightTracker);
-
-app.listen(PORT, () => {
-  console.log("Server running on PORT:", PORT);
-});
+app.listen(PORT, () => console.log("✅ Server running on PORT:", PORT));
