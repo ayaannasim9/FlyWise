@@ -3,14 +3,137 @@ from pydantic import BaseModel, Field
 from typing import List, Literal
 import json
 from datetime import date, timedelta
+from typing import Optional, Any, Dict, List
+from dateutil import parser as dtparser
 
 app = FastAPI(title="FlyWise AI Service", version="0.1.0")
+
+def _dig(obj, path: Optional[str]):
+    """Walk obj using dot path like 'results.items'. Returns None if not found."""
+    if not path:
+        return obj
+    cur = obj
+    for part in path.split("."):
+        if isinstance(cur, dict) and part in cur:
+            cur = cur[part]
+        else:
+            return None
+    return cur
+
+def _guess_key(candidates, available_keys):
+    for c in candidates:
+        if c in available_keys:
+            return c
+    lower = {k.lower(): k for k in available_keys}
+    for c in candidates:
+        if c.lower() in lower:
+            return lower[c.lower()]
+    return None
+
+def _to_iso_date(value: str) -> Optional[str]:
+    try:
+        d = dtparser.parse(str(value)).date()
+        return d.isoformat()
+    except Exception:
+        return None
+
+def normalize_price_grid(
+    blob: Dict[str, Any],
+    root_path: Optional[str] = None,
+    date_field: Optional[str] = None,
+    price_field: Optional[str] = None,
+) -> List[Dict[str, Any]]:
+    """
+    Normalize many possible JSON shapes into:
+      [ {"date":"YYYY-MM-DD","price":float}, ... ]
+    """
+    arr = _dig(blob, root_path) if root_path else blob
+
+    # If dict, try common wrappers or first list value
+    if isinstance(arr, dict):
+        for k in ("data", "results", "items", "flights", "prices"):
+            if k in arr and isinstance(arr[k], list):
+                arr = arr[k]
+                break
+        if isinstance(arr, dict):
+            for v in arr.values():
+                if isinstance(v, list):
+                    arr = v
+                    break
+
+    if not isinstance(arr, list):
+        raise ValueError("Could not locate an array of entries in provided JSON.")
+
+    out: List[Dict[str, Any]] = []
+    for rec in arr:
+        if not isinstance(rec, dict):
+            continue
+        keys = set(rec.keys())
+        dkey = date_field or _guess_key(
+            ["date", "day", "depart", "departureDate", "startDate", "dTimeUTC", "outboundDate"],
+            keys
+        )
+        pkey = price_field or _guess_key(
+            ["price", "amount", "fare", "value", "total", "minPrice"],
+            keys
+        )
+
+        # Try to resolve date
+        dval = None
+        if dkey:
+            dval = _to_iso_date(rec.get(dkey))
+        else:
+            # heuristic: find any str value that parses as a date
+            for k, v in rec.items():
+                if isinstance(v, str):
+                    cand = _to_iso_date(v)
+                    if cand:
+                        dval = cand
+                        break
+        if not dval:
+            continue
+
+        # Try to resolve price (supports nested objects)
+        price_val = rec.get(pkey) if pkey else None
+        if isinstance(price_val, dict):
+            price_val = price_val.get("amount") or price_val.get("value") or price_val.get("total")
+        if price_val is None:
+            # search nested
+            for v in rec.values():
+                if isinstance(v, (int, float)):
+                    price_val = v; break
+                if isinstance(v, dict):
+                    for vv in v.values():
+                        if isinstance(vv, (int, float)):
+                            price_val = vv; break
+                    if price_val is not None:
+                        break
+        if price_val is None:
+            continue
+
+        try:
+            out.append({"date": dval, "price": float(price_val)})
+        except Exception:
+            continue
+
+    if not out:
+        raise ValueError("No valid (date, price) pairs found after normalization.")
+    out.sort(key=lambda r: r["date"])
+    return out
+
 
 class RecommendRequest(BaseModel):
     origin: str = Field(..., example="MAN")
     destination: str = Field(..., example="MXP")
     month: str = Field(..., example="2025-12")  # YYYY-MM
     stay_len: int = Field(..., example=15)
+
+    # NEW (optional) fields to pass a raw JSON blob or hints about where/how to read it
+    data: Optional[Dict[str, Any]] = None          # whole JSON to parse (if provided)
+    root_path: Optional[str] = None                # e.g. "data" or "results.items"
+    date_field: Optional[str] = None               # e.g. "dTimeUTC" | "date" | "depart"
+    price_field: Optional[str] = None              # e.g. "price" | "amount" | "total"
+
 
 class DateWindow(BaseModel):
     start: str
