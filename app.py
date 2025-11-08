@@ -1,8 +1,8 @@
 # app.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from flights import router as flights_router
-from hotels import router as hotels_router
+from main import router as flights_router
+from gemini import router as hotels_router
 
 app = FastAPI(title="FlyWise Backend", version="0.1.0")
 
