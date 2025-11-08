@@ -11,6 +11,10 @@ load_dotenv()
 
 app = FastAPI(title="Hotel Recommendation API")
 
+from fastapi import APIRouter
+router = APIRouter(prefix="", tags=["hotels"])
+
+
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if not GEMINI_API_KEY:
     raise RuntimeError("GEMINI_API_KEY not found in environment")
@@ -52,7 +56,7 @@ Provide realistic hotel suggestions for the destination, matching the budget and
 """
 
 
-@app.get("/hotels")
+@router.get("/hotels")
 def get_hotels(
     destination: str = Query(..., description="City or area to stay in"),
     arrival_date: str = Query(..., description="YYYY-MM-DD"),
@@ -110,7 +114,7 @@ def get_hotels(
     return json_data
 
 
-@app.get("/")
+@router.get("/")
 def root():
     return {
         "message": "Hotel Recommendation API",

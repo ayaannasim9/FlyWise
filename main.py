@@ -8,6 +8,9 @@ from dateutil import parser as dtparser
 
 app = FastAPI(title="FlyWise AI Service", version="0.1.0")
 
+from gemini import router as hotels_router
+app.include_router(hotels_router)
+
 from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(
     CORSMiddleware,
