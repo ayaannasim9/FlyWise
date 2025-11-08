@@ -101,7 +101,7 @@ router.get("/roundtrip", async (req, res) => {
       return priceA - priceB;
     });
 
-    res.json(sorted);
+    res.json(sorted.slice(0, 5));
   } catch (err) {
     console.error("FLIGHT API ERROR:", err);
     res.status(500).json({ error: "Server error while fetching flight data" });
