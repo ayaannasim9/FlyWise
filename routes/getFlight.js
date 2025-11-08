@@ -95,7 +95,13 @@ router.get("/roundtrip", async (req, res) => {
       };
     });
 
-    res.json(simplified);
+    const sorted = simplified.sort((a, b) => {
+      const priceA = a.price ?? Infinity;
+      const priceB = b.price ?? Infinity;
+      return priceA - priceB;
+    });
+
+    res.json(sorted);
   } catch (err) {
     console.error("FLIGHT API ERROR:", err);
     res.status(500).json({ error: "Server error while fetching flight data" });
