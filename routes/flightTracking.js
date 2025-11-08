@@ -32,28 +32,38 @@ router.get("/trackFlight", async (req, res) => {
 
     //making sure it's an array
     const list = Array.isArray(data) ? data : [data];
-    const simplified = list.map((item) => {
-      const departure = item.departure || {};
-      const arrival = item.arrival || {};
-      return {
-        departure: {
-          airport: departure.airport,
-          code: departure.airportCode,
-          time: departure.departureDateTime,
-          scheduled: departure.scheduledTime,
-          terminal: departure.terminal,
-          gate: departure.gate,
-        },
-        arrival: {
-          airport: arrival.airport,
-          code: arrival.airportCode,
-          time: arrival.arrivalDateTime,
-          estimated: arrival.estimatedTime,
-          terminal: arrival.terminal,
-          gate: arrival.gate,
-        },
-      };
-    });
+    const simplified = list
+      .map((item) => {
+        const departure = item.departure || {};
+        const arrival = item.arrival || {};
+        if (
+          Object.keys(departure).length === 0 &&
+          Object.keys(arrival).length === 0
+        ) {
+          return null; // ignore empty entries
+        }
+
+        return {
+          flightNumber: item.flightNumber || item.num || null,
+          airline: item.airline || name,
+          departure: {
+            airport: departure.airport,
+            code: departure.airportCode,
+            time: departure.departureDateTime,
+            terminal: departure.terminal,
+            gate: departure.gate,
+          },
+          arrival: {
+            airport: arrival.airport,
+            code: arrival.airportCode,
+            time: arrival.arrivalDateTime,
+            terminal: arrival.terminal,
+            gate: arrival.gate,
+          },
+          status: item.status || item.flightStatus || null,
+        };
+      })
+      .filter(Boolean); // removes null
 
     res.json(simplified);
   } catch (e) {
