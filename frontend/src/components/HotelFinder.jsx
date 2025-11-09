@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const propertyTypes = ["Hotel", "Apartment", "Villa", "Resort", "Boutique"];
 const vibes = ["Modern", "Heritage", "Luxury", "Budget-Friendly", "Wellness"];
@@ -26,12 +26,14 @@ const formatCurrency = (value, currency) => {
 export default function HotelFinder({
   destinationCode,
   destinationName,
+  destinationCity,
   arrivalDate,
   departureDate,
   travelers = 1,
   currency = "EUR",
   apiBaseUrl,
 }) {
+  const [stayCity, setStayCity] = useState(destinationCity || destinationName || destinationCode);
   const [propertyType, setPropertyType] = useState("Hotel");
   const [vibe, setVibe] = useState("Modern");
   const [amenities, setAmenities] = useState(["Pool", "Breakfast included"]);
@@ -40,7 +42,11 @@ export default function HotelFinder({
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
 
-  const destinationLabel = destinationName || destinationCode;
+  useEffect(() => {
+    setStayCity(destinationCity || destinationName || destinationCode);
+  }, [destinationCity, destinationName, destinationCode]);
+
+  const destinationLabel = stayCity || destinationName || destinationCode;
   const amenityText = useMemo(() => amenities.join(", "), [amenities]);
 
   const toggleAmenity = (item) => {
@@ -109,6 +115,19 @@ export default function HotelFinder({
         className="px-6 py-6 grid gap-6 lg:grid-cols-2"
       >
         <div className="space-y-4">
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+              Where will you stay?
+            </label>
+            <input
+              type="text"
+              value={stayCity}
+              onChange={(e) => setStayCity(e.target.value)}
+              placeholder="e.g. New Delhi, India"
+              className="mt-2 w-full rounded-2xl border px-4 py-3 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-600"
+            />
+          </div>
+
           <div>
             <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">
               Property type

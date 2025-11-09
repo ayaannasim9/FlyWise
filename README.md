@@ -19,6 +19,18 @@ SNOWFLAKE_SCHEMA=PUBLIC
 
 Once configured, the API will create a `FLYWISE_SEARCHES` table (if needed), append each `/roundtrip` or `/oneway` query, and serve aggregated data from `GET /analytics/routes`. The frontend’s “Snowflake insights” section on the results page reads that endpoint to highlight the most popular routes in real time.
 
+### ElevenLabs Pronunciation (optional)
+
+Add these env vars to enable localized phrase audio in the results view:
+
+```
+ELEVENLABS_API_KEY=your_api_key
+# optional custom voice
+ELEVENLABS_VOICE_ID=21m00Tcm4TlvDq8ikWAM
+```
+
+When configured, `/phrase-guide/:lang` returns regional phrases and `/phrase-guide/audio` streams ElevenLabs TTS so users can hear “Namaste”, “Konnichiwa”, etc., before they land.
+
 ### Run
 
 ```

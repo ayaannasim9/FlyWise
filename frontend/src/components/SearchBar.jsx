@@ -94,8 +94,7 @@ export default function SearchBar() {
   };
 
   return (
-    <div className="flex justify-center w-full mt-6 px-4">
-      <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-6 lg:p-8 w-full max-w-5xl text-gray-900 border border-white/40">
+    <div className="glass-card glow-border p-6 lg:p-8 w-full text-gray-900">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <p className="text-sm font-semibold text-blue-900 uppercase tracking-[0.3em]">
             Plan your journey
@@ -296,6 +295,5 @@ export default function SearchBar() {
           </button>
         </div>
       </div>
-    </div>
   );
 }

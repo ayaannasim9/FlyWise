@@ -7,8 +7,38 @@
 body {
   margin: 0;
   font-family: "Inter", sans-serif;
-  background: linear-gradient(180deg, #cfe9ff 0%, #eaf5ff 35%, #ffffff 100%);
+  background: linear-gradient(180deg, #dff2ff 0%, #f4faff 60%, #ffffff 100%);
   overflow-x: hidden;
+}
+
+:root {
+  color-scheme: light;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 1.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(18px);
+}
+
+.glow-border {
+  position: relative;
+}
+.glow-border::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(120deg, rgba(59,130,246,0.4), rgba(45,212,191,0.4));
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
 }
 
 /* ✅ Cloud-like glow effect */
@@ -32,4 +62,22 @@ body {
   bottom: -150px;
   left: -100px;
   z-index: -1;
+}
+
+.ai-shimmer {
+  width: 40%;
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0) 100%);
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(60%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
 }

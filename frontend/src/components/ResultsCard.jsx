@@ -37,17 +37,18 @@ const formatCurrency = (amount, currency = "USD") => {
   }
 };
 
-export default function ResultsCard({ flight, isBest = false }) {
+export default function ResultsCard({ flight, isBest = false, currencyOverride }) {
   if (!flight) return null;
-  const { price, currency, legs = [], total_duration_mins } = flight;
+  const { price, currency: flightCurrency, legs = [], total_duration_mins } = flight;
+  const currency = currencyOverride || flightCurrency || "GBP";
   const headline = legs[0];
 
   return (
-    <div className="bg-white/95 backdrop-blur rounded-3xl shadow-xl border border-white/60 overflow-hidden">
-      <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-4 bg-gradient-to-r from-blue-600/10 to-indigo-600/10">
+    <div className="bg-white/95 backdrop-blur rounded-3xl shadow-xl border border-white/60 overflow-hidden glow-border">
+      <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-4 bg-gradient-to-r from-blue-600/10 via-indigo-500/10 to-teal-500/10">
         <div>
           <p className="text-sm text-gray-500 uppercase tracking-wide">
-            From {headline?.from} to {headline?.to}
+            {headline?.from} → {headline?.to}
           </p>
           <p className="text-2xl font-bold text-slate-900">
             {formatCurrency(price, currency)}
@@ -57,12 +58,15 @@ export default function ResultsCard({ flight, isBest = false }) {
           </p>
         </div>
 
-        <div className="text-right">
+        <div className="flex flex-col items-end gap-2">
           {isBest && (
-            <span className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold uppercase tracking-wide">
-              Best value
+            <span className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-green-500/10 text-green-700 text-xs font-semibold uppercase tracking-wide border border-green-100">
+              <span className="text-green-500 text-base">★</span> Best value
             </span>
           )}
+          <span className="text-xs text-slate-500 uppercase tracking-wide">
+            {headline?.airline || "Multiple airlines"}
+          </span>
         </div>
       </div>
 
