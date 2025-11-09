@@ -1,3 +1,6 @@
 .env
 node_modules/
 __pycache__/
+.gitignore
+frontend/node_modules
+snowflake.log

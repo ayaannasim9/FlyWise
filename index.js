@@ -6,7 +6,10 @@ const getFlight = require("./routes/getFlight");
 const getSingle = require("./routes/getSingle");
 const flightTracking = require("./routes/flightTracking");
 const phraseGuide = require("./routes/phraseGuide");
-const { getTopRoutes, isConfigured: snowflakeConfigured } = require("./snowflakeClient");
+const {
+  getTopRoutes,
+  isConfigured: snowflakeConfigured,
+} = require("./snowflakeClient");
 const { getHealthInsight } = require("./healthAgent");
 
 const app = express();
