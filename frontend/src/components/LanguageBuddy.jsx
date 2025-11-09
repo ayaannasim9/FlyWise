@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
 
+const celebrityVoices = [
+  { id: "default", label: "Calm Guide" },
+  { id: "donald", label: "Donald-esque", voiceId: import.meta.env.VITE_ELEVENLABS_TRUMP_VOICE },
+  { id: "modi", label: "Modi Vibe", voiceId: import.meta.env.VITE_ELEVENLABS_MODI_VOICE },
+  { id: "elon", label: "Elon Hype", voiceId: import.meta.env.VITE_ELEVENLABS_ELON_VOICE },
+];
+
 export default function LanguageBuddy({
   apiBaseUrl,
   languageCode = "en",
@@ -9,6 +16,7 @@ export default function LanguageBuddy({
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
   const [playing, setPlaying] = useState("");
+  const [voice, setVoice] = useState("default");
 
   useEffect(() => {
     if (!languageCode) return;
@@ -36,10 +44,17 @@ export default function LanguageBuddy({
     setPlaying(text);
     setError("");
     try {
+      const selectedVoice = celebrityVoices.find((v) => v.id === voice);
       const res = await fetch(`${apiBaseUrl}/phrase-guide/audio`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lang: languageCode, text }),
+        body: JSON.stringify({
+          lang: languageCode,
+          text,
+          voiceId:
+            selectedVoice?.voiceId ||
+            (selectedVoice?.id === "default" ? undefined : null),
+        }),
       });
       const data = await res.json();
       if (!res.ok || !data.audio) {
@@ -88,6 +103,22 @@ export default function LanguageBuddy({
           Essentials for {destination || "your trip"} – tap play to hear
           pronunciation.
         </p>
+        <div className="mt-3">
+          <label className="text-xs uppercase tracking-wide text-gray-500 font-semibold">
+            Celebrity mode
+          </label>
+          <select
+            value={voice}
+            onChange={(e) => setVoice(e.target.value)}
+            className="mt-1 w-full rounded-2xl border px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-600"
+          >
+            {celebrityVoices.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="space-y-3">

@@ -7,6 +7,7 @@ const getSingle = require("./routes/getSingle");
 const flightTracking = require("./routes/flightTracking");
 const phraseGuide = require("./routes/phraseGuide");
 const { getTopRoutes, isConfigured: snowflakeConfigured } = require("./snowflakeClient");
+const { getHealthInsight } = require("./healthAgent");
 
 const app = express();
 
@@ -31,6 +32,25 @@ app.get("/analytics/routes", async (req, res) => {
       searches: Number(row.SEARCHES),
     })),
   });
+});
+
+app.get("/health/aqi", async (req, res) => {
+  const { lat, lon, start, end } = req.query;
+  if (!lat || !lon || !start || !end) {
+    return res.status(400).json({ error: "Missing lat, lon, start or end." });
+  }
+  try {
+    const data = await getHealthInsight({
+      lat,
+      lon,
+      startDate: start,
+      endDate: end,
+    });
+    res.json(data);
+  } catch (err) {
+    console.error("AQI error:", err.message);
+    res.status(500).json({ error: "Unable to fetch air quality data." });
+  }
 });
 
 const PORT = process.env.PORT || 3000;

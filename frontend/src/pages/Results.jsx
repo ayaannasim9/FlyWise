@@ -6,6 +6,7 @@ import HotelFinder from "../components/HotelFinder";
 import FlightTrackerWidget from "../components/FlightTrackerWidget";
 import AIPlaceholder from "../components/AIPlaceholder";
 import LanguageBuddy from "../components/LanguageBuddy";
+import HealthInsight from "../components/HealthInsight";
 import airports from "../airportData";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
@@ -33,8 +34,11 @@ export default function Results() {
   const [aiError, setAiError] = useState("");
   const [routeInsights, setRouteInsights] = useState([]);
   const [routeInsightsEnabled, setRouteInsightsEnabled] = useState(false);
+  const [healthStatus, setHealthStatus] = useState("idle");
+  const [healthData, setHealthData] = useState(null);
+  const [healthError, setHealthError] = useState("");
 
-  const summary = useMemo(() => {
+  const tripSummary = useMemo(() => {
       const travelerCount =
         Number(searchParams.get("number_of_adults") || 0) +
         Number(searchParams.get("number_of_children") || 0) +
@@ -66,6 +70,8 @@ export default function Results() {
       toName: toAirport.name || toCode,
       toCity: toAirport.city || toAirport.name || toCode,
       language: toAirport.language || "en",
+      lat: toAirport.lat,
+      lon: toAirport.lon,
       depart,
       returnDate,
       cabin: searchParams.get("cabin_class") || "Economy",
@@ -77,7 +83,7 @@ export default function Results() {
   }, [searchParams]);
 
   const hasAiInputs =
-    Boolean(summary.from && summary.to && summary.month && summary.stayLen) &&
+    Boolean(tripSummary.from && tripSummary.to && tripSummary.month && tripSummary.stayLen) &&
     hasQuery;
 
   const aiItineraries = useMemo(
@@ -106,28 +112,28 @@ export default function Results() {
   }, [aiError]);
 
   const bookingFlightUrl = useMemo(() => {
-    if (!summary.from || !summary.to || !summary.depart) return "";
+    if (!tripSummary.from || !tripSummary.to || !tripSummary.depart) return "";
     const bestWindow = aiData?.best_windows?.[0];
-    const outbound = bestWindow?.start || summary.depart;
+    const outbound = bestWindow?.start || tripSummary.depart;
     const inbound =
       tripType === "oneway"
         ? undefined
-        : bestWindow?.end || summary.returnDate || summary.depart;
+        : bestWindow?.end || tripSummary.returnDate || tripSummary.depart;
     const params = new URLSearchParams({
-      origin_iata: summary.from,
-      destination_iata: summary.to,
+      origin_iata: tripSummary.from,
+      destination_iata: tripSummary.to,
       tripType: tripType === "oneway" ? "oneway" : "roundtrip",
       depart: outbound,
-      adults: String(summary.travelers),
+      adults: String(tripSummary.travelers),
     });
     if (inbound) params.set("return", inbound);
-    return `https://www.booking.com/flights/search/${summary.from}.${summary.to}.roundtrip-1/en-gb?${params.toString()}`;
+    return `https://www.booking.com/flights/search/${tripSummary.from}.${tripSummary.to}.roundtrip-1/en-gb?${params.toString()}`;
   }, [
-    summary.from,
-    summary.to,
-    summary.depart,
-    summary.returnDate,
-    summary.travelers,
+    tripSummary.from,
+    tripSummary.to,
+    tripSummary.depart,
+    tripSummary.returnDate,
+    tripSummary.travelers,
     tripType,
     aiData,
   ]);
@@ -186,10 +192,10 @@ export default function Results() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            origin: summary.from,
-            destination: summary.to,
-            month: summary.month,
-            stay_len: summary.stayLen,
+            origin: tripSummary.from,
+            destination: tripSummary.to,
+            month: tripSummary.month,
+            stay_len: tripSummary.stayLen,
             itineraries: aiItineraries,
           }),
           signal: controller.signal,
@@ -218,10 +224,10 @@ export default function Results() {
     return () => controller.abort();
   }, [
     hasAiInputs,
-    summary.from,
-    summary.to,
-    summary.month,
-    summary.stayLen,
+    tripSummary.from,
+    tripSummary.to,
+    tripSummary.month,
+    tripSummary.stayLen,
     aiItineraries,
   ]);
 
@@ -240,6 +246,28 @@ export default function Results() {
     };
     fetchInsights();
   }, []);
+
+  useEffect(() => {
+    if (!tripSummary.lat || !tripSummary.lon || !tripSummary.depart) return;
+    const endDate = tripSummary.returnDate || tripSummary.depart;
+    setHealthStatus("loading");
+    setHealthError("");
+    fetch(
+      `${API_BASE_URL}/health/aqi?lat=${tripSummary.lat}&lon=${tripSummary.lon}&start=${tripSummary.depart}&end=${endDate}`
+    )
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Unable to fetch air quality.");
+        return res.json();
+      })
+      .then((data) => {
+        setHealthData(data);
+        setHealthStatus("success");
+      })
+      .catch((err) => {
+        setHealthError(err.message);
+        setHealthStatus("error");
+      });
+  }, [tripSummary.lat, tripSummary.lon, tripSummary.depart, tripSummary.returnDate]);
 
   const formatDate = (value) => {
     if (!value) return "";
@@ -272,21 +300,21 @@ export default function Results() {
         <div className="mt-6 bg-white/90 backdrop-blur-xl rounded-3xl shadow-xl p-6 border border-white/50">
           <div className="flex flex-wrap items-center gap-3 text-gray-600 text-sm">
             <span className="text-xl font-semibold text-gray-900">
-              {summary.from} → {summary.to}
+              {tripSummary.from} → {tripSummary.to}
             </span>
             <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold uppercase tracking-wide">
               {tripType === "oneway" ? "One Way" : "Round Trip"}
             </span>
             <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold uppercase tracking-wide">
-              {summary.cabin}
+              {tripSummary.cabin}
             </span>
             <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold uppercase tracking-wide">
-              {summary.travelers || 1} Traveler
-              {summary.travelers > 1 ? "s" : ""}
+              {tripSummary.travelers || 1} Traveler
+              {tripSummary.travelers > 1 ? "s" : ""}
             </span>
-            {summary.stayLen && (
+            {tripSummary.stayLen && (
               <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold uppercase tracking-wide">
-                {summary.stayLen} day stay
+                {tripSummary.stayLen} day stay
               </span>
             )}
           </div>
@@ -295,26 +323,26 @@ export default function Results() {
             <div>
               Departing
               <p className="text-gray-900 font-semibold">
-                {formatDate(summary.depart)}
+                {formatDate(tripSummary.depart)}
               </p>
             </div>
             {tripType !== "oneway" && (
               <div>
                 Returning
                 <p className="text-gray-900 font-semibold">
-                  {formatDate(summary.returnDate)}
+                  {formatDate(tripSummary.returnDate)}
                 </p>
               </div>
             )}
             <div>
               Currency
-              <p className="text-gray-900 font-semibold">{summary.currency}</p>
+              <p className="text-gray-900 font-semibold">{tripSummary.currency}</p>
             </div>
-            {summary.month && (
+            {tripSummary.month && (
               <div>
                 Travel month
                 <p className="text-gray-900 font-semibold">
-                  {summary.month}
+                  {tripSummary.month}
                 </p>
               </div>
             )}
@@ -370,7 +398,7 @@ export default function Results() {
                       key={flight.id || index}
                       flight={flight}
                       isBest={index === 0}
-                      currencyOverride={summary.currency}
+                      currencyOverride={tripSummary.currency}
                     />
                   ))}
                 </div>
@@ -401,7 +429,7 @@ export default function Results() {
                     {aiStatus === "success" && aiData && (
                       <AIRecommendations
                         data={aiData}
-                        currency={summary.currency}
+                        currency={tripSummary.currency}
                         onBook={bookingFlightUrl ? handleBookNow : undefined}
                       />
                     )}
@@ -410,13 +438,13 @@ export default function Results() {
               )}
 
               <HotelFinder
-            destinationCode={summary.to}
-            destinationName={summary.toName}
-            destinationCity={summary.toCity}
-            arrivalDate={summary.depart}
-            departureDate={summary.returnDate || summary.depart}
-            travelers={summary.travelers}
-            currency={summary.currency}
+            destinationCode={tripSummary.to}
+            destinationName={tripSummary.toName}
+            destinationCity={tripSummary.toCity}
+            arrivalDate={tripSummary.depart}
+            departureDate={tripSummary.returnDate || tripSummary.depart}
+            travelers={tripSummary.travelers}
+            currency={tripSummary.currency}
             apiBaseUrl={AI_BASE_URL}
               />
 
@@ -438,8 +466,14 @@ export default function Results() {
 
               <LanguageBuddy
                 apiBaseUrl={API_BASE_URL}
-                languageCode={summary.language || "en"}
-                destination={summary.toCity || summary.toName}
+                languageCode={tripSummary.language || "en"}
+                destination={tripSummary.toCity || tripSummary.toName}
+              />
+
+              <HealthInsight
+                data={healthData}
+                status={healthStatus}
+                error={healthError}
               />
 
               {routeInsightsEnabled && routeInsights.length > 0 && (

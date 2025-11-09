@@ -129,14 +129,14 @@ router.post("/phrase-guide/audio", express.json(), async (req, res) => {
       .json({ error: "ElevenLabs is not configured on the server." });
   }
 
-  const { text, lang = "en" } = req.body || {};
+  const { text, lang = "en", voiceId } = req.body || {};
   if (!text) {
     return res.status(400).json({ error: "Missing phrase text." });
   }
 
   try {
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE_ID}`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId || ELEVENLABS_VOICE_ID}`,
       {
         method: "POST",
         headers: {

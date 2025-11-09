@@ -27,9 +27,23 @@ Add these env vars to enable localized phrase audio in the results view:
 ELEVENLABS_API_KEY=your_api_key
 # optional custom voice
 ELEVENLABS_VOICE_ID=21m00Tcm4TlvDq8ikWAM
+# optional parody voices surfaced in the UI
+VITE_ELEVENLABS_TRUMP_VOICE=voice_id_here
+VITE_ELEVENLABS_MODI_VOICE=voice_id_here
+VITE_ELEVENLABS_ELON_VOICE=voice_id_here
 ```
 
 When configured, `/phrase-guide/:lang` returns regional phrases and `/phrase-guide/audio` streams ElevenLabs TTS so users can hear “Namaste”, “Konnichiwa”, etc., before they land.
+
+### Air Quality Guardian (optional)
+
+Enable OpenWeather’s air-pollution agent by adding:
+
+```
+OPENWEATHER_API_KEY=your_key_here
+```
+
+The backend’s `/health/aqi` endpoint will then surface AQI forecasts, wellbeing advice, and safer travel windows.
 
 ### Run
 
