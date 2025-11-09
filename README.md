@@ -47,6 +47,8 @@ Create a `.env` file in your root directory:
 
 ```env
 GEMINI_API_KEY=your_gemini_api_key_here
+FLIGHT_API_KEY=your_flight_api_key_here
+PORT=the_port_you_want_the_backend_to_be_running_on
 ```
 
 If you’re enabling Snowflake analytics in the Node service, also add:
