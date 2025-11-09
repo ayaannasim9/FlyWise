@@ -15,6 +15,7 @@ export default function SearchBar() {
     arrival_airport_code: airports[1]?.code || "",
     departure_date: "",
     arrival_date: "",
+    stay_len: 7,
     number_of_adults: 1,
     number_of_children: 0,
     number_of_infants: 0,
@@ -58,6 +59,9 @@ export default function SearchBar() {
     if (form.number_of_adults < 1) {
       return "At least one adult traveler is required.";
     }
+    if (!form.stay_len || form.stay_len < 1) {
+      return "Stay length must be at least 1 day.";
+    }
     return "";
   };
 
@@ -79,6 +83,7 @@ export default function SearchBar() {
       number_of_infants: String(form.number_of_infants),
       cabin_class: form.cabin_class,
       currency: form.currency,
+      stay_len: String(form.stay_len),
     });
 
     if (form.tripType === "roundtrip") {
@@ -176,7 +181,7 @@ export default function SearchBar() {
           </div>
         </div>
 
-        <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           <div>
             <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">
               Adults
@@ -219,7 +224,7 @@ export default function SearchBar() {
             />
           </div>
 
-          <div>
+          <div className="lg:col-span-1">
             <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">
               Cabin Class
             </label>
@@ -240,6 +245,20 @@ export default function SearchBar() {
                 );
               })}
             </select>
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+              Stay Length (days)
+            </label>
+            <input
+              type="number"
+              min={1}
+              max={45}
+              value={form.stay_len}
+              onChange={updateField("stay_len")}
+              className="mt-2 w-full rounded-2xl border px-4 py-3 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
         </div>
 
