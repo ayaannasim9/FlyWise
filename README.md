@@ -1,61 +1,159 @@
-# FlyWise
+# 🛫 FlyWise
 
-## FlyWise AI Skeleton (FastAPI)
+**FlyWise** is an AI-powered travel companion that helps you decide whether to **book your flight now or wait**, and recommends the best **hotels** using **Google Gemini AI**.  
+It combines flight analytics, price intelligence, and generative AI to make smarter travel decisions.
 
-Run the mock AI service locally to unblock the frontend.
+---
 
-### Snowflake-Powered Search Analytics
+## ✨ Features
 
-The Express server can log every flight search into Snowflake and expose trending routes in the UI. Provide the following environment variables (e.g. inside `.env`) and restart `node index.js`:
+- **Book or Wait Decision Engine** – Analyzes flight price trends and volatility.
+- **AI Hotel Finder** – Uses Google Gemini to recommend hotels matching your budget and vibe.
+- **FastAPI Backend** – Blazing-fast REST API with clean modular routes.
+- **CORS Enabled** – Ready for frontend integration or third-party apps.
+- **Optional Node Server** – Adds flight route search and Snowflake analytics.
 
+---
+
+## 🧱 Tech Stack
+
+| Layer                 | Technology                                              |
+| --------------------- | ------------------------------------------------------- |
+| **Backend Framework** | FastAPI                                                 |
+| **Language**          | Python 3.9+                                             |
+| **AI Model**          | Google Gemini (`gemini-flash-latest`)                   |
+| **Env Config**        | python-dotenv                                           |
+| **Server**            | Uvicorn                                                 |
+| **Optional**          | Node/Express for flight search, Snowflake for analytics |
+| **Frontend**          | React + Vite                                            |
+
+---
+
+## ⚙️ Prerequisites
+
+Before you start, make sure you have:
+
+- 🐍 **Python 3.9+**
+- 🧰 **pip** (Python package manager)
+- 🔑 **Google Gemini API Key**
+- 🟢 **Node.js** (if running the Express service)
+- 💾 (Optional) **Snowflake credentials** if using analytics
+
+---
+
+## 🔐 Environment Setup
+
+Create a `.env` file in your root directory:
+
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
 ```
-SNOWFLAKE_ACCOUNT=xy12345.eu-west-2
-SNOWFLAKE_USER=FLYWISE
-SNOWFLAKE_PASSWORD=********
-SNOWFLAKE_WAREHOUSE=COMPUTE_WH
+
+If you’re enabling Snowflake analytics in the Node service, also add:
+
+```env
+SNOWFLAKE_ACCOUNT=...
+SNOWFLAKE_USER=...
+SNOWFLAKE_PASSWORD=...
+SNOWFLAKE_WAREHOUSE=...
 SNOWFLAKE_DATABASE=FLYWISE
 SNOWFLAKE_SCHEMA=PUBLIC
 ```
 
-Once configured, the API will create a `FLYWISE_SEARCHES` table (if needed), append each `/roundtrip` or `/oneway` query, and serve aggregated data from `GET /analytics/routes`. The frontend’s “Snowflake insights” section on the results page reads that endpoint to highlight the most popular routes in real time.
+---
 
-### ElevenLabs Pronunciation (optional)
+## 🚀 Getting the Project Running
 
-Add these env vars to enable localized phrase audio in the results view:
+Follow these steps to launch **FlyWise** locally.
 
-```
-ELEVENLABS_API_KEY=your_api_key
-# optional custom voice
-ELEVENLABS_VOICE_ID=21m00Tcm4TlvDq8ikWAM
-# optional parody voices surfaced in the UI
-VITE_ELEVENLABS_TRUMP_VOICE=voice_id_here
-VITE_ELEVENLABS_MODI_VOICE=voice_id_here
-VITE_ELEVENLABS_ELON_VOICE=voice_id_here
+### 1️⃣ Clone the Repository
+
+```bash
+git clone https://github.com/ayaannasim9/FlyWise.git
+cd FlyWise
 ```
 
-When configured, `/phrase-guide/:lang` returns regional phrases and `/phrase-guide/audio` streams ElevenLabs TTS so users can hear “Namaste”, “Konnichiwa”, etc., before they land.
+---
 
-### Air Quality Guardian (optional)
+### 2️⃣ Start the FastAPI Backend (Python)
 
-Enable OpenWeather’s air-pollution agent by adding:
+This is the AI backend that communicates with Google Gemini.
 
-```
-OPENWEATHER_API_KEY=your_key_here
-```
-
-The backend’s `/health/aqi` endpoint will then surface AQI forecasts, wellbeing advice, and safer travel windows.
-
-### Run
-
-```
+```bash
+python -m venv venv
+source venv/bin/activate  # on Windows: venv\Scripts\activate
 pip install -r requirements.txt
+
 uvicorn main:app --reload --port 7860
 ```
 
-### Try it
+- Runs at: **http://localhost:7860**
+- Make sure your `.env` file contains a valid `GEMINI_API_KEY`.
 
+---
+
+### 3️⃣ Start the Node/Express Flight Routes Server (Optional)
+
+This handles flight search routes and connects to Snowflake for analytics.
+
+```bash
+# from the project root
+npm install
+node index.js
+# or
+# npm run dev
 ```
-curl -X POST http://localhost:7860/recommend -H "Content-Type: application/json" -d '{
-  "origin":"MAN","destination":"MXP","month":"2025-12","stay_len":15
-}'
+
+- Runs at: **http://localhost:3000**
+- Requires the Snowflake vars if you’re using analytics logging.
+
+---
+
+### 4️⃣ Start the Frontend (Vite + React)
+
+This is the web interface that communicates with both backends.
+
+```bash
+cd frontend
+npm install
+npm run dev
 ```
+
+- Runs at: **http://localhost:5173**
+
+Make sure your frontend environment file (`frontend/.env` or `.env.local`) points to the backend servers:
+
+```env
+VITE_API_BASE=http://localhost:7860
+VITE_ROUTES_BASE=http://localhost:3000
+```
+
+---
+
+## ✅ What Should Be Running
+
+| Service              | Port | Description                          |
+| -------------------- | ---- | ------------------------------------ |
+| **FastAPI Backend**  | 7860 | Handles AI and hotel recommendations |
+| **Node/Express API** | 3000 | Handles flight routes + analytics    |
+| **Frontend (Vite)**  | 5173 | User interface                       |
+
+Keep them all running in separate terminals for full functionality.
+
+---
+
+## 🧩 Example API Endpoints
+
+- `GET /` → Health check for FastAPI server
+- `POST /analyze-flight` → Returns “Book” or “Wait” recommendation
+- `POST /recommend-hotel` → Returns AI-curated hotel suggestions
+- (Node) `GET /flights` → Flight search API
+
+---
+
+## 🤝 Contributing
+
+Pull requests are welcome!  
+If you’d like to add features (like a new AI endpoint or analytics dashboard), please open an issue first to discuss your idea.
+
+---
